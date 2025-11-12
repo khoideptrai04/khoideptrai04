@@ -9,6 +9,8 @@ append content
                 h6.badge-success.p-2.rounded= msg
             else
                 h6.badge-danger.p-2.rounded= msg
+        .col-10.mt-3.mb-3
+            a(href="/dashboard/accounts/add").btn.btn-success.mr-2 ➕ Add New Account
         table.table.col-10.mt-5
             if !users
                 h3.badge-danger.p-3.rounded Admins/employees not found!
@@ -19,7 +21,7 @@ append content
                     th(scope='col') Full name
                     th(scope='col') E-mail
                     th(scope='col') Role
-                    th(scope='col') Edit
+                    th(scope='col') Actions
                 tbody
                     each user in users
                         tr
@@ -29,4 +31,30 @@ append content
                         td= user.user_type
                         td(role="button")
                             - var editHref = "/dashboard/accounts/edit?id="+user.id
-                            a(href=editHref) ✏️
+                            a(href=editHref).btn.btn-sm.btn-primary.mr-1 ✏️ Edit
+                            button.btn.btn-sm.btn-danger(onclick=`deleteUser(${user.id})`) 🗑️ Delete
+
+    script.
+        function deleteUser(id) {
+            if (confirm('Are you sure you want to delete this account?')) {
+                fetch('/dashboard/accounts/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting account: ' + error);
+                });
+            }
+        }

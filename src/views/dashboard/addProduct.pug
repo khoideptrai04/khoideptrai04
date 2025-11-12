@@ -1,0 +1,66 @@
+extends layout/main.pug
+
+append content
+    h2.col-12.mt-5 Add New Product
+    hr
+    form(method="POST" action="/dashboard/product/create" enctype="multipart/form-data")
+        .row.justify-content-center.mt-5
+                table.table.col-10
+                    h2.col-12.text-center General information
+                    thead
+                        tr
+                        th(scope='col') Image 1
+                        th(scope='col') Image 2
+                        th(scope='col') Image 3
+                        th(scope='col') Title
+                        th(scope='col') Description
+                    tbody
+                        tr
+                        td
+                            label(for="img1", role="button")
+                                img(src="/public/images/products/default.jpg").img-table.img-thumbnail
+                            input(name="img" id="img1" type="file" accept="image/jpeg").d-none
+                            input(type="checkbox" name="img1").ml-1
+                        td
+                            label(for='img2', role="button")
+                                img(src="/public/images/products/default.jpg").img-table.img-thumbnail
+                            input(name='img' id='img2' type="file" accept="image/jpeg").d-none
+                            input(type="checkbox" name="img2").ml-1
+                        td
+                            label(for='img3', role="button")
+                                img(src="/public/images/products/default.jpg").img-table.img-thumbnail
+                            input(name='img' id='img3' type="file" accept="image/jpeg").d-none
+                            input(type="checkbox" name="img3").ml-1
+                        td
+                            input(name="title" placeholder="Product title" required)
+                        td
+                            textarea(name="description" rows="4" placeholder="Product description" required).col-12
+        .row.justify-content-center.mt-5
+            table.table.col-10
+                h2.col-12.text-center Sizes and prices
+                thead
+                    tr
+                    th(scope='col') Size
+                    th(scope='col') Price (€)
+                    th(scope='col') Stock
+                tbody
+                    tr
+                    td LARGE
+                    td
+                        input(type="number" name="price_LARGE" placeholder="0.00" step="0.01" required)
+                    td
+                        input(type="number" name="stock_LARGE" placeholder="0" min="0" required)
+                    tr
+                    td MEDIUM
+                    td
+                        input(type="number" name="price_MEDIUM" placeholder="0.00" step="0.01" required)
+                    td
+                        input(type="number" name="stock_MEDIUM" placeholder="0" min="0" required)
+                    tr
+                    td SMALL
+                    td
+                        input(type="number" name="price_SMALL" placeholder="0.00" step="0.01" required)
+                    td
+                        input(type="number" name="stock_SMALL" placeholder="0" min="0" required)
+            input(type="submit" value="Create Product").btn-lg.btn-primary.col-10.mt-2.mb-5
+            script(src="/public/js/editProduct.js")

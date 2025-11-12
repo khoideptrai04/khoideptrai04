@@ -1,16 +1,16 @@
-// express initialization
+// Khởi tạo express
 const express = require("express");
 const router = express.Router();
 const config = require('../config/app-config.js');
 
-// required libraries
+// Các thư viện cần thiết
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
 const MySQLStore = require('express-mysql-session')(session);
 const sessionStore = new MySQLStore(config.sqlCon);
 
-// global middleware
+// Middleware toàn cục
 router.use(session({
     name: process.env.SESSION_NAME,
     key: process.env.SESSION_KEY,
@@ -20,13 +20,13 @@ router.use(session({
     saveUninitialized: false
 }));
 
-router.use(bodyParser.json()); // support json encoded bodies
-router.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
+router.use(bodyParser.json()); // Hỗ trợ dữ liệu JSON
+router.use(bodyParser.urlencoded({ extended: false })); // Hỗ trợ dữ liệu form
 
 router.use(passport.initialize());
 router.use(passport.session());
 
-// Check if there's stock to add product on cart
+// Kiểm tra tồn kho trước khi thêm sản phẩm vào giỏ hàng
 router.get("/checkStock", async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
@@ -39,7 +39,7 @@ router.get("/checkStock", async (req, res) => {
     res.send(stock);
 });
 
-// Add products to cart
+// Thêm sản phẩm vào giỏ hàng
 router.post("/addToCart", async (req, res) => {
     const CartController = require('../controllers/cart.js');
     const Cart = new CartController();
@@ -54,7 +54,7 @@ router.post("/addToCart", async (req, res) => {
     res.send(response)
 });
 
-// Load paginated products
+// Tải danh sách sản phẩm theo trang
 router.get("/loadPage", async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
@@ -69,7 +69,7 @@ router.get("/loadPage", async (req, res) => {
     res.render(`${config.views}/templates/productsList.ejs`, {products: products});
 });
 
-// Modify products on cart page
+// Cập nhật sản phẩm trong giỏ hàng
 router.post("/updateCart", async (req, res) => {
     const CartController = require('../controllers/cart.js');
     const Cart = new CartController();

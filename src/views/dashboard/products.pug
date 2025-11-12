@@ -9,6 +9,8 @@ append content
                 h6.badge-success.p-2.rounded.col-3.text-center= msg
             else
                 h6.badge-danger.p-2.rounded.col-3.text-center= msg
+        .col-10.mt-3.mb-3
+            a(href="/dashboard/products/add").btn.btn-success.mr-2 ➕ Add New Product
         table.table.col-10.mt-5
             if !products
                 h3.badge-danger.p-3.rounded Database products not found!
@@ -18,7 +20,7 @@ append content
                     th(scope='col') #
                     th(scope='col') Title
                     th(scope='col') Description
-                    th(scope='col') Edit
+                    th(scope='col') Actions
                 tbody
                     each product in products
                         tr
@@ -26,4 +28,30 @@ append content
                         td= product.title
                         td= product.description
                         td(role="button")
-                            a(href="/dashboard/products/edit?id=" + product.id) ✏️
+                            a(href="/dashboard/products/edit?id=" + product.id).btn.btn-sm.btn-primary.mr-1 ✏️ Edit
+                            button.btn.btn-sm.btn-danger(onclick=`deleteProduct(${product.id})`) 🗑️ Delete
+
+    script.
+        function deleteProduct(id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                fetch('/dashboard/products/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting product: ' + error);
+                });
+            }
+        }

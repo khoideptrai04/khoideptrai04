@@ -1,14 +1,14 @@
-// express initialization
+// Khởi tạo express
 const express = require("express");
 const router = express.Router();
 
-// config and controller
+// Cấu hình và controller
 require('dotenv').config();
 const config = require('../config/app-config.js');
 const UsersController = require('../controllers/users.js');
 const User = new UsersController();
 
-// required libraries
+// Các thư viện cần thiết
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
@@ -20,7 +20,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const cookieParser = require('cookie-parser');
 const csurf = require('csurf');
 
-// global middleware
+// Middleware toàn cục
 router.use(session({
     name: process.env.SESSION_NAME,
     key: process.env.SESSION_KEY,
@@ -45,9 +45,9 @@ router.use(async function(req,res,next) {
     next();
 });
 
-router.use(bodyParser.json()); // support json encoded bodies
+router.use(bodyParser.json()); // Hỗ trợ dữ liệu JSON
 
-router.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
+router.use(bodyParser.urlencoded({ extended: false })); // Hỗ trợ dữ liệu form
 
 router.use(cookieParser());
 
@@ -55,21 +55,21 @@ router.use(csurf({ cookie: true }));
 
 router.use(flash());
 
-// passport configurations
+// Cấu hình passport
 passport.use('local', new LocalStrategy(async function (email, password, done) {
     let user;
 
     try {
         user = await User.getUserByEmail(email);
     } catch (e) {
-        return done(null, false, { message: 'No user with that email' })
+        return done(null, false, { message: 'Không tìm thấy người dùng với email này' })
     }
 
     try {
         if (await bcrypt.compare(password, user.password)) {
             return done(null, user)
         } else {
-            return done(null, false, { message: 'Password incorrect' })
+            return done(null, false, { message: 'Mật khẩu không chính xác' })
         }
     } catch (e) {
         return done(e)
@@ -82,14 +82,14 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(async function(id, done) {
     try{
-        let user = User.getUserById(id)
+        let user = await User.getUserById(id) // Sửa: thêm await
         done(null, user);
     } catch (e) {
-        throw e;
+        done(e);
     }
 });
 
-// login page
+// Trang đăng nhập
 router.get("/", notAuthenticated(), (req, res) => {
     res.render(`${config.views}/public/login.ejs`, { csrfToken: req.csrfToken() });
 });
@@ -100,14 +100,14 @@ router.post("/", passport.authenticate('local', {
     failureFlash: true
 }));
 
-// logout
+// Đăng xuất
 router.get("/logout", (req, res) => {
     req.logout();
     req.session.destroy();
     res.redirect('/login');
 });
 
-// registration page
+// Trang đăng ký
 router.get("/register", (req, res) => {
     res.render(`${config.views}/public/register.ejs`, { csrfToken: req.csrfToken() });
 });
@@ -123,7 +123,7 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// Profile page
+// Trang hồ sơ cá nhân
 router.get("/profile", async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const User = new UsersController();
@@ -139,7 +139,7 @@ router.get("/profile", async (req, res) => {
     res.render(`${config.views}/public/profile.ejs`, {user: user, msg: msg, csrfToken: req.csrfToken() });
 });
 
-// Profile update
+// Cập nhật hồ sơ
 router.post("/profile", async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const User = new UsersController();
@@ -148,8 +148,8 @@ router.post("/profile", async (req, res) => {
     try {
         await User.update(req.body.name, req.body.email, userId);
         if (req.body.password != "") {
-            hashedPassword = await bcrypt.hash(req.body.password, 10);
-            User.updatePassword(hashedPassword, userId);
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+            await User.updatePassword(hashedPassword, userId);
         }
         res.redirect('/login/profile?success=true');
     } catch(e) {
@@ -157,25 +157,25 @@ router.post("/profile", async (req, res) => {
     }
 });
 
-// Reset Password Form
+// Form đặt lại mật khẩu
 router.get("/reset", async (req, res) => {
     let msg = req.query.success;
     res.render(`${config.views}/public/reset.ejs`, {msg: msg, csrfToken: req.csrfToken() });
 });
 
-// Reset Password
+// Xử lý đặt lại mật khẩu
 router.post("/reset", async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const User = new UsersController();
 
     try {
-        user = await User.getUserByEmail(req.body.email);
+        const user = await User.getUserByEmail(req.body.email);
 
         const nodemailer = require('nodemailer');
 
         const randomPass = Math.random().toString(36).slice(-8);
-        hashedPassword = await bcrypt.hash(randomPass, 10);
-        User.updatePassword(hashedPassword, user.id);
+        const hashedPassword = await bcrypt.hash(randomPass, 10);
+        await User.updatePassword(hashedPassword, user.id);
 
         let transport = nodemailer.createTransport({
             host: process.env.EMAIL_HOST,
@@ -188,11 +188,11 @@ router.post("/reset", async (req, res) => {
         const message = {
             from: 'service@burgersco.com',
             to: user.email,
-            subject: 'Password Reset - Burges Co.',
-            text: `Hey ${user.name}, your password was resetted at Burgers Co.\nYour new password is: ${randomPass}`
+            subject: 'Đặt lại mật khẩu - Burgers Co.',
+            text: `Chào ${user.name}, mật khẩu của bạn đã được đặt lại tại Burgers Co.\nMật khẩu mới của bạn là: ${randomPass}`
         };
 
-        transport.sendMail(message);
+        await transport.sendMail(message);
 
         res.redirect('/login/reset?success=true');
     } catch {
@@ -201,7 +201,7 @@ router.post("/reset", async (req, res) => {
 
 });
 
-// auth verify middleware
+// Middleware kiểm tra chưa đăng nhập
 function notAuthenticated() {
 	return (req, res, next) => {
         if (!req.isAuthenticated()) return next();

@@ -1,9 +1,9 @@
-// express initialization
+// Khởi tạo express
 const express = require("express");
 const router = express.Router();
 const config = require('../config/app-config.js');
 
-// required libraries
+// Các thư viện cần thiết
 const session = require('express-session');
 const passport = require('passport');
 const MySQLStore = require('express-mysql-session')(session);
@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// global middleware
+// Middleware toàn cục
 router.use(session({
     name: process.env.SESSION_NAME,
     key: process.env.SESSION_KEY,
@@ -37,9 +37,9 @@ router.use(session({
 router.use(passport.initialize());
 router.use(passport.session());
 
-router.use(bodyParser.json()); // support json encoded bodies
-router.use(bodyParser.urlencoded({ extended: false })); // support encoded bodies
-
+router.use(bodyParser.json()); // Hỗ trợ dữ liệu JSON
+router.use(bodyParser.urlencoded({ extended: false })); // Hỗ trợ dữ liệu form
+//Phân quyền
 router.use(async function(req,res,next) {
     const UsersController = require('../controllers/users.js');
     const User = new UsersController();
@@ -55,7 +55,7 @@ router.use(async function(req,res,next) {
     next();
 });
 
-// Index dashboard page
+// Trang tổng quan (dashboard)
 router.get("/", authenticateEmployee(), async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
@@ -70,7 +70,7 @@ router.get("/", authenticateEmployee(), async (req, res) => {
     res.render(`${config.views}/dashboard/index.pug`, {products: products});
 });
 
-// Products dashboard page
+// Trang danh sách sản phẩm trong dashboard
 router.get("/products", authenticateEmployee(), async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
@@ -88,7 +88,7 @@ router.get("/products", authenticateEmployee(), async (req, res) => {
     res.render(`${config.views}/dashboard/products.pug`, {products: products, msg: msg});
 });
 
-// Products edit page
+// Trang chỉnh sửa sản phẩm
 router.get("/products/edit", authenticateEmployee(), async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
@@ -105,22 +105,22 @@ router.get("/products/edit", authenticateEmployee(), async (req, res) => {
     res.render(`${config.views}/dashboard/editProduct.pug`, {productSizes: productSizes});
 });
 
-// Product save edit page
+// Lưu thông tin chỉnh sửa sản phẩm
 router.post("/product/save", authenticateEmployee(), upload.array('img',3), async (req, res) => {
     const ProductsController = require('../controllers/products.js');
     const Products = new ProductsController();
 
     let id = req.body.id;
 
-    // Product details
+    // Thông tin sản phẩm
     let product = { title: req.body.title, description: req.body.description};
 
-    // Sizes and prices
+    // Kích thước và giá
     let large = {product_id: id, price: req.body.price_LARGE, stock: req.body.stock_LARGE, size: 'LARGE'}
     let medium = {product_id: id, price: req.body.price_MEDIUM, stock: req.body.stock_MEDIUM, size: 'MEDIUM'}
     let small = {product_id: id, price: req.body.price_SMALL, stock: req.body.stock_SMALL, size: 'SMALL'}
 
-    // Renaming uploaded images
+    // Đổi tên ảnh đã upload
     try {
         let path = `public/images/products/${id}`;
         if (req.body.img1) fs.renameSync(`${path}-1`,`${path}-1.jpg`);
@@ -153,7 +153,77 @@ router.post("/product/save", authenticateEmployee(), upload.array('img',3), asyn
     res.redirect('/dashboard/products');
 });
 
-// Accounts dashboard page
+// Trang thêm sản phẩm mới
+router.get("/products/add", authenticateEmployee(), async (req, res) => {
+    req.session.multer = 0;
+    res.render(`${config.views}/dashboard/addProduct.pug`);
+});
+
+// Lưu sản phẩm mới
+router.post("/product/create", authenticateEmployee(), upload.array('img',3), async (req, res) => {
+    const ProductsController = require('../controllers/products.js');
+    const Products = new ProductsController();
+
+    // Thông tin sản phẩm
+    let product = { title: req.body.title, description: req.body.description};
+
+    // Kích thước và giá
+    let sizes = [
+        {size: 'LARGE', price: req.body.price_LARGE, stock: req.body.stock_LARGE},
+        {size: 'MEDIUM', price: req.body.price_MEDIUM, stock: req.body.stock_MEDIUM},
+        {size: 'SMALL', price: req.body.price_SMALL, stock: req.body.stock_SMALL}
+    ];
+
+    try {
+        const productId = await Products.create(product, sizes);
+        
+        // Đổi tên ảnh đã upload
+        try {
+            let path = `public/images/products/${productId}`;
+            if (req.body.img1) fs.renameSync(`${path}-1`,`${path}-1.jpg`);
+            if (req.body.img2) {
+                if (fs.existsSync(`${path}-1`)) {
+                    fs.renameSync(`${path}-1`,`${path}-2.jpg`);
+                } else {
+                    fs.renameSync(`${path}-2`,`${path}-2.jpg`);
+                }
+            }
+            if(req.body.img3) {
+                if (fs.existsSync(`${path}-1`)) {
+                    fs.renameSync(`${path}-1`,`${path}-3.jpg`);
+                } else if (fs.existsSync(`${path}-2`)) {
+                    fs.renameSync(`${path}-2`,`${path}-3.jpg`);
+                } else {
+                    fs.renameSync(`${path}-3`,`${path}-3.jpg`);
+                }
+            }
+        } catch(e) {
+            req.session.msg = e;
+        }
+        
+        req.session.msg = 'Product created successfully!';
+    } catch (e) {
+        req.session.msg = e;
+    }
+
+    res.redirect('/dashboard/products');
+});
+
+// Xóa sản phẩm
+router.delete("/products/delete", authenticateEmployee(), async (req, res) => {
+    const ProductsController = require('../controllers/products.js');
+    const Products = new ProductsController();
+
+    try {
+        req.session.msg = await Products.delete(req.body.id);
+    } catch (e) {
+        req.session.msg = e;
+    }
+
+    res.json({success: true, message: req.session.msg});
+});
+
+// Trang quản lý tài khoản (nhân viên & admin)
 router.get("/accounts", authenticateAdmin(), async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const Users = new UsersController();
@@ -172,7 +242,7 @@ router.get("/accounts", authenticateAdmin(), async (req, res) => {
     res.render(`${config.views}/dashboard/accounts.pug`, {users: users, msg: msg});
 });
 
-// Account edit page
+// Trang chỉnh sửa tài khoản
 router.get("/accounts/edit", authenticateAdmin(), async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const Users = new UsersController();
@@ -187,7 +257,7 @@ router.get("/accounts/edit", authenticateAdmin(), async (req, res) => {
     res.render(`${config.views}/dashboard/editAccount.pug`, {user: user});
 });
 
-// Account save edit page
+// Lưu thông tin chỉnh sửa tài khoản
 router.post("/account/save", authenticateAdmin(), async (req, res) => {
     const UsersController = require('../controllers/users.js');
     const Users = new UsersController();
@@ -205,12 +275,54 @@ router.post("/account/save", authenticateAdmin(), async (req, res) => {
     res.redirect('/dashboard/accounts');
 });
 
-// Account edit page
+// Trang thêm tài khoản mới
+router.get("/accounts/add", authenticateAdmin(), async (req, res) => {
+    res.render(`${config.views}/dashboard/addAccount.pug`);
+});
+
+// Lưu tài khoản mới
+router.post("/account/create", authenticateAdmin(), async (req, res) => {
+    const UsersController = require('../controllers/users.js');
+    const Users = new UsersController();
+
+    try {
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        let user = {
+            name: req.body.name, 
+            email: req.body.email, 
+            password: hashedPassword,
+            user_type: req.body.type
+        };
+        
+        await Users.createEmployee(user);
+        req.session.msg = 'Account created successfully!';
+    } catch (e) {
+        req.session.msg = e;
+    }
+
+    res.redirect('/dashboard/accounts');
+});
+
+// Xóa tài khoản
+router.delete("/accounts/delete", authenticateAdmin(), async (req, res) => {
+    const UsersController = require('../controllers/users.js');
+    const Users = new UsersController();
+
+    try {
+        req.session.msg = await Users.deleteEmployee(req.body.id);
+    } catch (e) {
+        req.session.msg = e;
+    }
+
+    res.json({success: true, message: req.session.msg});
+});
+
+// Trang truy cập bị từ chối
 router.get("/forbidden", authenticateEmployee(), async (req, res) => {
     res.render(`${config.views}/dashboard/forbidden.pug`);
 });
 
-// auth verify middleware
+// Middleware kiểm tra quyền nhân viên (employee trở lên)
 function authenticateEmployee() {
 	return (req, res, next) => {
         if (res.locals.isAdmin) return next();
@@ -218,7 +330,7 @@ function authenticateEmployee() {
 	}
 }
 
-// auth verify middleware
+// Middleware kiểm tra quyền admin
 function authenticateAdmin() {
 	return (req, res, next) => {
         if (res.locals.isAdmin == "admin") return next();
