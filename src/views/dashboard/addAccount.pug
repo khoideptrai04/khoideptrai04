@@ -1,0 +1,28 @@
+extends layout/main.pug
+
+append content
+    h2.col-12.mt-5 Add New Account
+    hr
+    form(method="POST" action="/dashboard/account/create")
+        .row.justify-content-center.mt-5
+            table.table.col-10
+                thead
+                    tr
+                    th(scope='col') Full name
+                    th(scope='col') Email
+                    th(scope='col') Role
+                    th(scope='col') Password
+                tbody
+                    tr
+                    th
+                        input(type="text" name="name" placeholder="Full name" required)
+                    th
+                        input(type="email" name="email" placeholder="email@example.com" required)
+                    th
+                        select(name="type" required)
+                            option(value="") Select role
+                            option(value="admin") Admin
+                            option(value="employee") Employee
+                    th
+                        input(type="password" name="password" placeholder="Password" required)
+            input(type="submit" value="Create Account").btn-lg.btn-primary.col-3.mt-4

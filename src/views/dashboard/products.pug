@@ -1,0 +1,193 @@
+extends layout/main.pug
+
+append content
+    .premium-dashboard.min-vh-100
+        // Animated Background
+        .animated-bg
+            .gradient-orb.orb-1
+            .gradient-orb.orb-2
+            .gradient-orb.orb-3
+        
+        .container-fluid.py-5.position-relative
+            .row.justify-content-center
+                .col-12.col-xl-11
+                    // Premium Header Section
+                    .dashboard-header.mb-5
+                        .row.align-items-center
+                            .col-md-8
+                                .header-content
+                                    .badge.bg-gradient-premium.mb-3.px-3.py-2
+                                        i.fas.fa-crown.me-2
+                                        | Premium Dashboard
+                                    h1.display-4.fw-bold.text-gradient.mb-2 Products Management
+                                    p.lead.text-muted.mb-0
+                                        i.fas.fa-box.me-2
+                                        | Manage your premium product catalog with style
+                            .col-md-4.text-md-end.mt-3.mt-md-0
+                                a(href="/dashboard/products/add").btn.btn-premium.btn-lg.px-4.shadow-premium
+                                    i.fas.fa-plus-circle.me-2
+                                    | Add New Product
+                                    .btn-shine
+                    
+                    // Message Alert with Animation
+                    if msg
+                        .row.justify-content-center.mb-4
+                            .col-12.col-lg-8
+                                if msg.includes('successfully')
+                                    .alert.alert-premium-success.shadow-premium.animate__animated.animate__fadeInDown
+                                        .alert-icon
+                                            i.fas.fa-check-circle
+                                        .alert-content
+                                            strong.d-block Success!
+                                            span= msg
+                                        button.btn-close.btn-close-white(type='button' data-bs-dismiss='alert')
+                                else
+                                    .alert.alert-premium-danger.shadow-premium.animate__animated.animate__fadeInDown
+                                        .alert-icon
+                                            i.fas.fa-exclamation-triangle
+                                        .alert-content
+                                            strong.d-block Error!
+                                            span= msg
+                                        button.btn-close.btn-close-white(type='button' data-bs-dismiss='alert')
+                    
+                    // Premium Products Grid/Table
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            .row.align-items-center
+                                .col
+                                    h3.mb-0.fw-bold
+                                        i.fas.fa-layer-group.me-2.text-primary
+                                        | Product Catalog
+                                .col-auto
+                                    .stats-badge
+                                        i.fas.fa-chart-line.me-2
+                                        span #{products ? products.length : 0} Products
+                        
+                        .card-body-premium.p-0
+                            if !products || products.length === 0
+                                .empty-state.text-center.py-5
+                                    .empty-icon.mb-4
+                                        i.fas.fa-box-open
+                                    h3.mb-3.fw-bold No Products Yet
+                                    p.text-muted.mb-4 Your product catalog is waiting to be filled with amazing items
+                                    a(href="/dashboard/products/add").btn.btn-premium.btn-lg.px-5
+                                        i.fas.fa-rocket.me-2
+                                        | Create First Product
+                            else
+                                .table-premium-container
+                                    table.table.table-premium.mb-0
+                                        thead
+                                            tr
+                                                th.px-4(style='width: 80px')
+                                                    .th-content
+                                                        i.fas.fa-hashtag.me-2
+                                                        | ID
+                                                th
+                                                    .th-content
+                                                        i.fas.fa-tag.me-2
+                                                        | Product Info
+                                                th
+                                                    .th-content
+                                                        i.fas.fa-align-left.me-2
+                                                        | Description
+                                                th.text-center(style='width: 350px')
+                                                    .th-content
+                                                        i.fas.fa-cubes.me-2
+                                                        | Variants & Stock
+                                                th.text-center(style='width: 200px')
+                                                    .th-content
+                                                        i.fas.fa-cog.me-2
+                                                        | Actions
+                                        tbody
+                                            each product, index in products
+                                                tr.product-row(data-aos='fade-up' data-aos-delay=`${index * 50}`)
+                                                    td.px-4
+                                                        .product-id #{product.id}
+                                                    td
+                                                        .product-info
+                                                            .product-avatar
+                                                                i.fas.fa-box-open
+                                                            .product-details
+                                                                h6.mb-1.fw-bold= product.title
+                                                                small.text-muted Category: General
+                                                    td
+                                                        .description-text= product.description
+                                                    td
+                                                        if product.sizes && product.sizes.length
+                                                            .variants-container
+                                                                each size, sizeIndex in product.sizes
+                                                                    .variant-card(class=`variant-${sizeIndex % 3}`)
+                                                                        .variant-header
+                                                                            .size-badge= size.size
+                                                                            .stock-badge(class=size.stock > 10 ? 'stock-high' : size.stock > 0 ? 'stock-medium' : 'stock-low')
+                                                                                i.fas.fa-box.me-1
+                                                                                | #{size.stock}
+                                                                        .variant-price $#{Number(size.price).toFixed(2)}
+                                                        else
+                                                            .no-variants
+                                                                i.fas.fa-exclamation-circle.me-2
+                                                                | No variants available
+                                                    td
+                                                        .action-buttons
+                                                            a(href="/dashboard/products/edit?id=" + product.id).btn.btn-action.btn-edit
+                                                                i.fas.fa-edit
+                                                                span Edit
+                                                            button.btn.btn-action.btn-delete(onclick=`deleteProduct(${product.id})`)
+                                                                i.fas.fa-trash-alt
+                                                                span Delete
+
+    script.
+        function deleteProduct(id) {
+            // Premium confirmation dialog
+            if (confirm('⚠️ Are you sure you want to delete this product?\n\n🗑️ This action cannot be undone and will permanently remove the product from your catalog.')) {
+                const btn = event.target.closest('button');
+                const originalContent = btn.innerHTML;
+                
+                // Premium loading state
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Deleting...</span>';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                
+                fetch('/dashboard/products/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Success animation
+                        btn.innerHTML = '<i class="fas fa-check"></i><span>Deleted!</span>';
+                        btn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+                        btn.style.color = 'white';
+                        btn.style.borderColor = 'transparent';
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('❌ Error: ' + data.message);
+                        btn.innerHTML = originalContent;
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Error deleting product: ' + error);
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+            }
+        }
+        
+        // Initialize AOS animations if available
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 800,
+                once: true
+            });
+        }

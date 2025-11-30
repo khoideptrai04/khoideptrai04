@@ -1,0 +1,157 @@
+extends layout/main.pug
+
+append content
+    .premium-dashboard.min-vh-100
+        .animated-bg
+            .gradient-orb.orb-1
+            .gradient-orb.orb-2
+            .gradient-orb.orb-3
+        
+        .container-fluid.py-5.position-relative
+            .row.justify-content-center
+                .col-12.col-xl-11
+                    .dashboard-header.mb-5
+                        .row.align-items-center
+                            .col-md-8
+                                .header-content
+                                    .badge.bg-gradient-premium.mb-3.px-3.py-2
+                                        i.fas.fa-receipt.me-2
+                                        | Orders Center
+                                    h1.display-5.fw-bold.text-white.mb-2 Orders Management
+                                    p.lead.mb-0
+                                        i.fas.fa-clipboard-list.me-2
+                                        | Monitor, filter and update every customer order in one place
+                            .col-md-4.text-md-end.mt-3.mt-md-0
+                                a(href='/dashboard/products').btn.btn-premium.btn-lg.px-4.shadow-premium
+                                    i.fas.fa-plus-circle.me-2
+                                    | Create Product
+                                    .btn-shine
+
+                    if stats.totalOrders
+                        .stats-grid.mb-4
+                            .metric-card
+                                h5 Total Orders
+                                .metric-value= stats.totalOrders
+                                .metric-trend
+                                    i.fas.fa-sync.me-1
+                                    | Real-time
+                            each item in stats.breakdown
+                                .metric-card
+                                    h5= item.status
+                                    .metric-value= item.total
+                                    span.status-badge(class=`status-${item.status}`)= item.status
+
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            h3.mb-0.fw-bold
+                                i.fas.fa-filter.me-2.text-primary
+                                | Order Filters
+                        .card-body-premium
+                            form.row.g-4.filters-premium(action='/dashboard/orders' method='get')
+                                .col-md-4
+                                    label Status
+                                    select.form-select(name='status')
+                                        option(value='all' selected=filters.status == 'all') All statuses
+                                        each status in statusOptions
+                                            option(value=status selected=filters.status == status)= status.charAt(0).toUpperCase() + status.slice(1)
+                                .col-md-5
+                                    label Search (ID, name, email)
+                                    input.form-control(type='text' name='q' value=filters.search placeholder='Search orders...')
+                                .col-md-3.align-self-end.d-flex.gap-3
+                                    button.btn.btn-premium.flex-grow-1(type='submit') Apply
+                                        .btn-shine
+                                    a.btn.btn-light.flex-grow-1(href='/dashboard/orders') Reset
+
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            h3.mb-0.fw-bold
+                                i.fas.fa-table.me-2.text-primary
+                                | Orders Table
+                        .card-body-premium.p-0
+                            if orders.length
+                                .table-premium-container
+                                    table.table.table-premium.mb-0
+                                        thead
+                                            tr
+                                                th ID
+                                                th Customer
+                                                th Total
+                                                th Items
+                                                th Status
+                                                th Created
+                                                th Actions
+                                        tbody
+                                            each order in orders
+                                                tr
+                                                    td.text-center
+                                                        span.product-id #{order.id}
+                                                    td
+                                                        .d-flex.align-items-center.gap-3
+                                                            .table-avatar= order.customer_name ? order.customer_name.charAt(0) : 'U'
+                                                            .table-user
+                                                                strong.d-block= order.customer_name
+                                                                small.text-muted= order.customer_email
+                                                    - const totalAmount = Number(order.total_amount || 0).toFixed(2)
+                                                    td € #{totalAmount}
+                                                    td= order.items_count
+                                                    td
+                                                        select.form-control.form-control-sm.status-select(data-id=order.id)
+                                                            each status in statusOptions
+                                                                option(value=status selected=order.status === status)= status
+                                                        small.text-muted.d-block.mt-1.status-feedback(data-id=order.id)
+                                                    - const createdAt = order.created_at instanceof Date ? order.created_at.toLocaleString() : order.created_at
+                                                    td= createdAt
+                                                    td
+                                                        .table-cta
+                                                            a.btn.btn-action.btn-edit.btn-sm(href=`/dashboard/orders/${order.id}`)
+                                                                i.fas.fa-eye
+                                                                span View
+                            else
+                                .empty-state.text-center
+                                    .empty-icon.mb-4
+                                        i.fas.fa-box-open
+                                    h3.mb-3.fw-bold No orders matching your filters
+                                    p.text-muted Try adjusting the filters to find other orders
+
+                            if pagination.pages > 1
+                                nav.mt-4
+                                    ul.pagination.justify-content-center
+                                        - const prevPage = Math.max(1, pagination.page - 1)
+                                        li.page-item(class=(pagination.page === 1 ? 'disabled' : ''))
+                                            a.page-link(href=`/dashboard/orders?page=${prevPage}&status=${filters.status}&q=${filters.search}`) Previous
+                                        - const pages = Array.from({length: pagination.pages}, (_, idx) => idx + 1)
+                                        each pageNumber in pages
+                                            li.page-item(class=(pageNumber === pagination.page ? 'active' : ''))
+                                                a.page-link(href=`/dashboard/orders?page=${pageNumber}&status=${filters.status}&q=${filters.search}`)= pageNumber
+                                        - const nextPage = Math.min(pagination.pages, pagination.page + 1)
+                                        li.page-item(class=(pagination.page === pagination.pages ? 'disabled' : ''))
+                                            a.page-link(href=`/dashboard/orders?page=${nextPage}&status=${filters.status}&q=${filters.search}`) Next
+
+    script.
+        document.querySelectorAll('.status-select').forEach((select) => {
+            select.addEventListener('change', async (event) => {
+                const orderId = event.target.dataset.id;
+                const status = event.target.value;
+                const feedback = document.querySelector(`.status-feedback[data-id="${orderId}"]`);
+                feedback.textContent = 'Saving...';
+                try {
+                    const response = await fetch(`/dashboard/orders/${orderId}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status })
+                    });
+                    if (!response.ok) throw new Error('Update failed');
+                    feedback.textContent = 'Updated';
+                    feedback.classList.remove('text-danger');
+                    feedback.classList.add('text-success');
+                } catch (err) {
+                    feedback.textContent = err.message;
+                    feedback.classList.remove('text-success');
+                    feedback.classList.add('text-danger');
+                }
+                setTimeout(() => feedback.textContent = '', 2500);
+            });
+        });
+

@@ -1,0 +1,123 @@
+extends layout/main.pug
+
+append content
+    .premium-dashboard.min-vh-100
+        .animated-bg
+            .gradient-orb.orb-1
+            .gradient-orb.orb-2
+            .gradient-orb.orb-3
+
+        .container-fluid.py-5.position-relative
+            .row.justify-content-center
+                .col-12.col-xl-11
+                    .dashboard-header.mb-5
+                        .row.align-items-center
+                            .col-md-8
+                                .header-content
+                                    .badge.bg-gradient-premium.mb-3.px-3.py-2
+                                        i.fas.fa-users-cog.me-2
+                                        | Team Management
+                                    h1.display-5.fw-bold.text-white.mb-2 Accounts Center
+                                    p.lead.mb-0
+                                        i.fas.fa-user-shield.me-2
+                                        | Manage admin & employee access with a premium experience
+                            .col-md-4.text-md-end.mt-3.mt-md-0
+                                a(href="/dashboard/accounts/add").btn.btn-premium.btn-lg.px-4.shadow-premium
+                                    i.fas.fa-user-plus.me-2
+                                    | Add New Account
+                                    .btn-shine
+
+                    if msg
+                        .row.mb-4
+                            .col-12
+                                if msg.includes('successfully')
+                                    .alert.alert-premium-success.shadow-premium.animate__animated.animate__fadeInDown
+                                        .alert-icon
+                                            i.fas.fa-check-circle
+                                        .alert-content
+                                            strong Success!
+                                            span= msg
+                                else
+                                    .alert.alert-premium-danger.shadow-premium.animate__animated.animate__fadeInDown
+                                        .alert-icon
+                                            i.fas.fa-exclamation-triangle
+                                        .alert-content
+                                            strong Error!
+                                            span= msg
+
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            .row.align-items-center
+                                .col
+                                    h3.mb-0.fw-bold
+                                        i.fas.fa-id-badge.me-2.text-primary
+                                        | Accounts List
+                                .col-auto
+                                    .stats-badge
+                                        i.fas.fa-users.me-2
+                                        span #{users ? users.length : 0} accounts
+                        .card-body-premium.p-0
+                            if !users || users.length === 0
+                                .empty-state.text-center
+                                    .empty-icon.mb-4
+                                        i.fas.fa-user-slash
+                                    h3.mb-3.fw-bold No accounts found
+                                    p.text-muted Start by creating an admin or employee account
+                            else
+                                .table-premium-container
+                                    table.table.table-premium.mb-0
+                                        thead
+                                            tr
+                                                th #
+                                                th User
+                                                th Email
+                                                th Role
+                                                th Actions
+                                        tbody
+                                            each user, idx in users
+                                                tr
+                                                    td= user.id
+                                                    td
+                                                        .d-flex.align-items-center.gap-3
+                                                            .table-avatar= user.name ? user.name.charAt(0) : 'U'
+                                                            .table-user
+                                                                strong.d-block= user.name
+                                                                small.text-muted ID: #{user.id}
+                                                    td= user.email
+                                                    td
+                                                        span.account-role-badge(class=user.user_type === 'admin' ? 'role-admin' : 'role-employee')
+                                                            = user.user_type || 'customer'
+                                                    td
+                                                        .table-cta
+                                                            a.btn.btn-action.btn-edit.btn-sm(href=`/dashboard/accounts/edit?id=${user.id}`)
+                                                                i.fas.fa-edit
+                                                                span Edit
+                                                            button.btn.btn-action.btn-delete.btn-sm(type='button' onclick=`deleteUser(${user.id})`)
+                                                                i.fas.fa-trash-alt
+                                                                span Delete
+
+    script.
+        function deleteUser(id) {
+            if (confirm('⚠️ Delete this account? This action cannot be undone.')) {
+                fetch('/dashboard/accounts/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting account: ' + error);
+                });
+            }
+        }

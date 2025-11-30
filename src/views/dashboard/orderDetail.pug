@@ -1,0 +1,116 @@
+extends layout/main.pug
+
+append content
+    h2.col-12.mt-5 Order details
+    hr
+
+    if error
+        .alert.alert-danger= error
+        a.btn.btn-primary.mt-3(href='/dashboard/orders') Back to orders
+    else
+        .row.mb-4
+            .col-md-4.mb-3
+                .card.shadow-sm
+                    .card-body
+                        h5.text-muted.mb-3 Order summary
+                        p.mb-1
+                            strong ID:
+                            |  #{order.id}
+                        p.mb-1
+                            strong Customer:
+                            |  #{order.customer_name}
+                        p.mb-1
+                            strong Email:
+                            |  #{order.customer_email}
+                        - const totalAmount = Number(order.total_amount || 0).toFixed(2)
+                        p.mb-1
+                            strong Total:
+                            |  € #{totalAmount}
+                        p.mb-3
+                            strong Created:
+                            - const createdAt = order.created_at instanceof Date ? order.created_at.toLocaleString() : order.created_at
+                            |  #{createdAt}
+                        label.font-weight-bold.d-block Current status
+                        select.form-control#detailStatus
+                            each status in statusOptions
+                                option(value=status selected=order.status === status)= status
+                        small.text-muted#detailStatusFeedback.d-block.mt-1
+            .col-md-4.mb-3
+                .card.shadow-sm
+                    .card-body
+                        h5.text-muted.mb-3 Shipping
+                        p.mb-1
+                            strong Address:
+                            |  #{order.address || '-'}
+                        p.mb-1
+                            strong City:
+                            |  #{order.city || '-'}
+                        p.mb-1
+                            strong State:
+                            |  #{order.state || '-'}
+                        p.mb-1
+                            strong Zip:
+                            |  #{order.zip || '-'}
+            .col-md-4.mb-3
+                .card.shadow-sm
+                    .card-body
+                        h5.text-muted.mb-3 Payment
+                        p.mb-1
+                            strong Method:
+                            |  #{order.payment_method || '-'}
+                        p.mb-1
+                            strong Last 4:
+                            |  #{order.payment_last4 || '-'}
+
+        h3.mt-4 Items
+        if items.length
+            table.table.table-striped.mt-3
+                thead
+                    tr
+                        th Product
+                        th Size
+                        th Quantity
+                        th Unit price
+                        th Line total
+                tbody
+                    each item in items
+                        tr
+                            - const unitPrice = Number(item.unit_price || 0).toFixed(2)
+                            - const lineTotal = Number(item.line_total || 0).toFixed(2)
+                            td= item.title
+                            td= item.size
+                            td= item.quantity
+                            td € #{unitPrice}
+                            td € #{lineTotal}
+        else
+            .alert.alert-info.mt-3 No items found for this order.
+
+        a.btn.btn-secondary.mt-4(href='/dashboard/orders') ← Back to orders
+
+        script.
+            const detailOrderId = !{JSON.stringify(order.id)};
+            const statusSelect = document.getElementById('detailStatus');
+            if (statusSelect) {
+                statusSelect.addEventListener('change', async (event) => {
+                    const status = event.target.value;
+                    const feedback = document.getElementById('detailStatusFeedback');
+                    feedback.textContent = 'Saving...';
+                    try {
+                        const response = await fetch(`/dashboard/orders/${detailOrderId}/status`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status })
+                        });
+                        if (!response.ok) throw new Error('Update failed');
+                        feedback.textContent = 'Updated';
+                        feedback.classList.add('text-success');
+                        feedback.classList.remove('text-danger');
+                    } catch (err) {
+                        feedback.textContent = err.message;
+                        feedback.classList.add('text-danger');
+                        feedback.classList.remove('text-success');
+                    }
+                    setTimeout(() => feedback.textContent = '', 2500);
+                });
+            }
+

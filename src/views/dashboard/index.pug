@@ -1,0 +1,95 @@
+extends layout/main.pug
+
+append content
+    .premium-dashboard.min-vh-100
+        .animated-bg
+            .gradient-orb.orb-1
+            .gradient-orb.orb-2
+            .gradient-orb.orb-3
+        
+        .container-fluid.py-5.position-relative
+            .row.justify-content-center
+                .col-12.col-xl-11
+                    .dashboard-header.mb-5
+                        .row.align-items-center
+                            .col-md-8
+                                .header-content
+                                    .badge.bg-gradient-premium.mb-3.px-3.py-2
+                                        i.fas.fa-chart-pie.me-2
+                                        | Analytics Overview
+                                    h1.display-5.fw-bold.text-white.mb-2 Premium Dashboard
+                                    p.lead.mb-0
+                                        i.fas.fa-bolt.me-2
+                                        | Centralized insights for products, users & orders
+                            .col-md-4.text-md-end.mt-3.mt-md-0
+                                a(href='/dashboard/products').btn.btn-premium.btn-lg.px-4.shadow-premium
+                                    i.fas.fa-layer-group.me-2
+                                    | Manage Products
+                                    .btn-shine
+
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            .row.align-items-center
+                                .col
+                                    h3.mb-0.fw-bold
+                                        i.fas.fa-chart-line.me-2.text-primary
+                                        | Performance Snapshot
+                                .col-auto
+                                    .trending-pill.filter-pill
+                                        i.fas.fa-sync-alt.me-2
+                                        | Updated live
+                        .card-body-premium
+                            .row.g-4
+                                .col-lg-4.col-md-6
+                                    .chart-card.metric-card.h-100
+                                        h5 User Segments
+                                        canvas#userChart
+                                .col-lg-4.col-md-6
+                                    .chart-card.metric-card.h-100
+                                        h5 Orders Trend (6 months)
+                                        canvas#orderChart
+                                .col-lg-4.col-md-12
+                                    .chart-card.metric-card.h-100
+                                        h5 Top 8 Best Sellers
+                                        canvas#productChart
+
+                    .premium-card.shadow-premium
+                        .card-glow
+                        .card-header-premium
+                            .row.align-items-center
+                                .col
+                                    h3.mb-0.fw-bold
+                                        i.fas.fa-exclamation-triangle.me-2.text-warning
+                                        | Out of Stock ⚠️
+                                .col-auto
+                                    .stats-badge
+                                        i.fas.fa-boxes.me-2
+                                        span #{Array.isArray(products) ? products.length : 0} items
+                        .card-body-premium
+                            if !Array.isArray(products)
+                                .alert.alert-warning.mb-0
+                                    | #{products}
+                            else
+                                .table-premium-container
+                                    table.table.table-premium.mb-0
+                                        thead
+                                            tr
+                                                th #
+                                                th Title
+                                                th Size
+                                                th Actions
+                                        tbody
+                                            each product in products
+                                                tr
+                                                    td= product.id
+                                                    td= product.title
+                                                    td= product.size
+                                                    td
+                                                        a(href="/dashboard/products/edit?id=" + product.id).btn.btn-action.btn-edit.btn-sm
+                                                            i.fas.fa-edit
+                                                            span Edit
+
+    #dashboard-data(data-dashboard=dashboardJson)
+    script(src='/node_modules/chart.js/dist/chart.umd.js')
+    script(src='/public/js/dashboardCharts.js')

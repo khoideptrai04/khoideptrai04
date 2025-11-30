@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../templates/head.ejs') -%>
+
+<!-- Thêm Font Awesome trực tiếp -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-jQEXp+QqUkeKvh+5Lj1B0aV6uwjQF+2mZx87jX6HBQc1F7vHULB+ZB2yLsaX6YyVv+0NhMSTiGdqW+6pZk5qRQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<body class="bg-primary">
+
+	<%- include('../templates/header.ejs') -%>
+
+	<div class="container mt-5 text-white">
+
+		<h1 class="text-center mb-5">Contact Us</h1>
+
+		<div class="row">
+			<!-- Left Column: Contact Info + Map -->
+			<div class="col-lg-6">
+
+				<!-- Contact Information -->
+				<div class="card bg-dark text-white mb-4 shadow">
+					<div class="card-body">
+						<h3>📞 Contact Information</h3>
+
+						<p class="mt-3">
+							<strong>Email:</strong> nghuyhoang2k3@gmail.com<br>
+							<strong>Phone:</strong> +84 0888 888 888<br>
+							
+							<strong>Address:</strong> 
+							<a href="https://www.google.com/maps/place/235+Ho%C3%A0ng+Qu%E1%BB%91c+Vi%E1%BB%87t,+C%E1%BB%91+Nhu%E1%BA%BF,+B%E1%BA%Bc+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i,+Vi%E1%BB%87t+Nam/"
+							   target="_blank" 
+							   class="text-warning fw-bold">
+								235 Hoàng Quốc Việt, Cổ Nhuế, Bắc Từ Liêm, Hà Nội
+							</a><br>
+
+							<strong>Working Hours:</strong> Mon – Fri (8:30 – 17:30)
+						</p>
+
+						<!-- Social Icons -->
+						<h5 class="mt-4">🌐 Follow Us</h5>
+						<div class="d-flex gap-3 mt-2 follow-icons">
+							<a href="https://www.facebook.com/huyhoanq003?locale=vi_VN" target="_blank">
+								<i class="fab fa-facebook-f"></i> Facebook
+							</a>
+							<a href="https://www.instagram.com/hzy.hoaq_/" target="_blank">
+								<i class="fab fa-instagram"></i> Instagram
+							</a>
+							<a href="https://www.youtube.com/" target="_blank">
+								<i class="fab fa-youtube"></i> YouTube
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<!-- Google Map Embed -->
+				<div class="card bg-dark text-white shadow mb-4">
+					<div class="card-body">
+						<h3>📍 Location</h3>
+
+						<p class="mt-2">
+							📌 Nhấn vào địa chỉ để mở Google Maps:<br>
+							<a href="https://www.google.com/maps/place/235+Ho%C3%A0ng+Qu%E1%BB%91c+Vi%E1%BB%87t,+C%E1%BB%91+Nhu%E1%BA%BF,+B%E1%BA%Bc+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i,+Vi%E1%BB%87t+Nam/"
+							   target="_blank"
+							   class="text-warning fw-bold">
+								235 Hoàng Quốc Việt, Cổ Nhuế, Bắc Từ Liêm, Hà Nội
+							</a>
+						</p>
+
+						<div class="mt-3">
+							<iframe
+								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.0628379317677!2d105.77890381516087!3d21.05572308599346!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ad8b0a4bd2b1%3A0x123456789abcdef!2s235%20Ho%C3%A0ng%20Qu%E1%BB%91c%20Vi%E1%BB%87t%2C%20H%C3%A0%20N%E1%BB%99i!5e0!3m2!1svi!2s!4v1763751234567!5m2!1svi!2s"
+								width="100%"
+								height="350"
+								style="border:0; border-radius:10px;"
+								allowfullscreen=""
+								loading="lazy"
+								referrerpolicy="no-referrer-when-downgrade">
+							</iframe>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<!-- Right Column: Contact Form -->
+			<div class="col-lg-6">
+				<div class="card bg-dark text-white shadow">
+					<div class="card-body">
+						<h3>📩 Send us a message</h3>
+
+						<form id="contactForm" class="mt-3">
+							<div class="mb-3">
+								<label for="name" class="form-label">Full Name</label>
+								<input type="text" class="form-control" id="name" placeholder="Your name" required>
+							</div>
+
+							<div class="mb-3">
+								<label for="email" class="form-label">Email</label>
+								<input type="email" class="form-control" id="email" placeholder="Your email" required>
+							</div>
+
+							<div class="mb-3">
+								<label for="subject" class="form-label">Subject</label>
+								<input type="text" class="form-control" id="subject" placeholder="Reason for contacting">
+							</div>
+
+							<div class="mb-3">
+								<label for="message" class="form-label">Message</label>
+								<textarea class="form-control" id="message" rows="4" required></textarea>
+							</div>
+
+							<button type="submit" class="btn btn-warning w-100 mt-2 fw-bold">Send Message</button>
+						</form>
+
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+	<!-- JS -->
+	<script>
+		document.getElementById('contactForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+
+			const name = document.getElementById('name').value.trim();
+			const email = document.getElementById('email').value.trim();
+			const subject = document.getElementById('subject').value.trim();
+			const message = document.getElementById('message').value.trim();
+
+			if (!name || !email || !message) {
+				alert("Please fill in all required fields.");
+				return;
+			}
+
+			alert("Your message has been sent successfully!");
+		});
+	</script>
+
+	<!-- CSS cho icon hover -->
+	<style>
+		.follow-icons a {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: #ffc107; /* vàng nhạt */
+			text-decoration: none;
+			transition: color 0.3s;
+			font-weight: 500;
+		}
+
+		.follow-icons a:hover {
+			color: #fff; /* trắng khi hover */
+		}
+
+		.follow-icons i {
+			font-size: 1.2rem;
+		}
+	</style>
+
+</body>
+</html>
